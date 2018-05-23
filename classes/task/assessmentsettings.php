@@ -236,8 +236,8 @@ class assessmentsettings extends \core\task\scheduled_task {
                 }
                 // Notify students. ON.
                 // This is controlled by workflow - notification is not released until Workflow is marked as 'Released'.
-                if ($DB->get_field('assign', 'sendstudentnotifications', array('id'=>$assign_mdl[$k]['id'])) == 1) {
-                    $DB->set_field('assign', 'sendstudentnotifications', 0, array('id'=>$assign_mdl[$k]['id']));
+                if ($DB->get_field('assign', 'sendstudentnotifications', array('id'=>$assign_mdl[$k]['id'])) == 0) {
+                    $DB->set_field('assign', 'sendstudentnotifications', 1, array('id'=>$assign_mdl[$k]['id']));
                     echo 'Notify students set <strong>ON</strong> for '.$assign_mdl[$k]['id'].'<br>';
                 }
 
