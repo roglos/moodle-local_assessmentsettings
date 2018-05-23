@@ -81,7 +81,8 @@ class assessmentsettings extends \core\task\scheduled_task {
          *     duedate (UNIX timestamp)                         *
          *     gradingduedate (UNIX timestamp)                  *
          ********************************************************/
-        $sqldates = $DB->get_records_sql('SELECT a.id as id,m.id as cm, m.idnumber as linkcode,a.name,a.duedate,a.gradingduedate FROM {course_modules} m
+        $sqldates = $DB->get_records_sql('SELECT a.id as id,m.id as cm, m.idnumber as linkcode,a.name,a.duedate,a.gradingduedate
+            FROM {course_modules} m
             JOIN {assign} a ON m.instance = a.id
             JOIN {modules} mo ON m.module = mo.id
             WHERE m.idnumber IS NOT null AND m.idnumber != "" AND mo.name = "assign"');
@@ -153,22 +154,22 @@ class assessmentsettings extends \core\task\scheduled_task {
         }
 
         // Create reference array of assignment id and link code from mdl.
-        $assign_mdl = array();
+        $assignmdl = array();
         foreach ($sqldates as $sd) {
-            $assign_mdl[$sd->linkcode]['id'] = $sd->id;
-            $assign_mdl[$sd->linkcode]['cm'] = $sd->cm;
-            $assign_mdl[$sd->linkcode]['lc'] = $sd->linkcode;
-            $assign_mdl[$sd->linkcode]['name'] = $sd->name;
+            $assignmdl[$sd->linkcode]['id'] = $sd->id;
+            $assignmdl[$sd->linkcode]['cm'] = $sd->cm;
+            $assignmdl[$sd->linkcode]['lc'] = $sd->linkcode;
+            $assignmdl[$sd->linkcode]['name'] = $sd->name;
         }
         // Create reference array of assignment id and link code from data warehouse.
-        $assess_ext = array();
+        $assessext = array();
         foreach ($assessments as $am) {
-            $assess_ext[$am[assessment_idcode]]['id'] = $am[id];
-            $assess_ext[$am[assessment_idcode]]['lc'] = $am[assessment_idcode];
-            $assess_ext[$am[assessment_idcode]]['name'] = $am[assessment_name];
-            $assess_ext[$am[assessment_idcode]]['dd'] = $am[assessment_duedate];
-            $assess_ext[$am[assessment_idcode]]['fb'] = $am[assessment_feedbackdate];
-            $assess_ext[$am[assessment_idcode]]['ms'] = $am[assessment_markscheme_code];
+            $assessext[$am[assessment_idcode]]['id'] = $am[id];
+            $assessext[$am[assessment_idcode]]['lc'] = $am[assessment_idcode];
+            $assessext[$am[assessment_idcode]]['name'] = $am[assessment_name];
+            $assessext[$am[assessment_idcode]]['dd'] = $am[assessment_duedate];
+            $assessext[$am[assessment_idcode]]['fb'] = $am[assessment_feedbackdate];
+            $assessext[$am[assessment_idcode]]['ms'] = $am[assessment_markscheme_code];
         }
         // Create reference array of students - if has a linked assessement AND an extension date/time.
         $student = array();
@@ -186,68 +187,57 @@ class assessmentsettings extends \core\task\scheduled_task {
 
         /* Set assignment settings *
          * ----------------------- */
-        foreach ($assign_mdl as $k=>$v) {
+        foreach ($assignmdl as $k => $v) {
             // Error trap - ensure we have an assessment link id.
-            if (!empty($assign_mdl[$k]['id'])) {
-                echo '<br>'.$assign_mdl[$k]['id'].': '.$assign_mdl[$k]['lc'].' - Assignment Settings<br>';
-                // Set Assignment name
-//                $mdl_name = $assign_mdl[$k]['name'];
-//                $link = $assign_mdl[$k]['lc'];
-//                $sits_name = $assess_ext[$link]['name'];
-//                echo $mdl_name.':'.$sits_name.'<br>';
-//                if (strlen($sits_name) > 0) {
-//                    if ($mdl_name == $sits_name) {
-//                        continue;
-//                    } else {
-//                        $DB->set_field('assign', 'name', $sits_name, array('id'=>$assign_mdl[$k]['id']));
-//                        echo 'Assignment name changed.<br>';
-//                    }
-//                }
+            if (!empty($assignmdl[$k]['id'])) {
+                echo '<br>'.$assignmdl[$k]['id'].': '.$assignmdl[$k]['lc'].' - Assignment Settings<br>';
 
                 // Set MarkingWorkflow. ON.
-                if ($DB->get_field('assign', 'markingworkflow', array('id'=>$assign_mdl[$k]['id'])) == 0) {
-                    $DB->set_field('assign', 'markingworkflow', 1, array('id'=>$assign_mdl[$k]['id']));
-                    echo 'Marking Workflow set <strong>ON</strong> for '.$assign_mdl[$k]['id'].'<br>';
+                if ($DB->get_field('assign', 'markingworkflow', array('id' => $assignmdl[$k]['id'])) == 0) {
+                    $DB->set_field('assign', 'markingworkflow', 1, array('id' => $assignmdl[$k]['id']));
+                    echo 'Marking Workflow set <strong>ON</strong> for '.$assignmdl[$k]['id'].'<br>';
                 }
-                // Set BlindMarking. OFF. Commented out, so not currently set by default.
-//                if ($DB->get_field('assign', 'blindmarking', array('id'=>$assign_mdl[$k]['id'])) == 1) {
-//                    $DB->set_field('assign', 'blindmarking', 0, array('id'=>$assign_mdl[$k]['id']));
-//                    echo 'Blind Marking set <strong>OFF</strong> for '.$assign_mdl[$k]['id'].'<br>';
-//                }
+                /* Set BlindMarking. OFF. Commented out, so not currently set by default.
+                 * if ($DB->get_field('assign', 'blindmarking', array('id'=>$assignmdl[$k]['id'])) == 1) {
+                 *   $DB->set_field('assign', 'blindmarking', 0, array('id'=>$assignmdl[$k]['id']));
+                 *   echo 'Blind Marking set <strong>OFF</strong> for '.$assignmdl[$k]['id'].'<br>';
+                 * }
+                 */
                 // Require submit button. ON.
-                if ($DB->get_field('assign', 'submissiondrafts', array('id'=>$assign_mdl[$k]['id'])) == 0) {
-                    $DB->set_field('assign', 'submissiondrafts', 1, array('id'=>$assign_mdl[$k]['id']));
-                    echo 'Submit Button set <strong>ON</strong> for '.$assign_mdl[$k]['id'].'<br>';
+                if ($DB->get_field('assign', 'submissiondrafts', array('id' => $assignmdl[$k]['id'])) == 0) {
+                    $DB->set_field('assign', 'submissiondrafts', 1, array('id' => $assignmdl[$k]['id']));
+                    echo 'Submit Button set <strong>ON</strong> for '.$assignmdl[$k]['id'].'<br>';
                 }
                 // Require submission statment. ON.
-                if ($DB->get_field('assign', 'requiresubmissionstatement', array('id'=>$assign_mdl[$k]['id'])) == 0) {
-                    $DB->set_field('assign', 'requiresubmissionstatement', 1, array('id'=>$assign_mdl[$k]['id']));
-                    echo 'Require Submission Statement set <strong>ON</strong> for '.$assign_mdl[$k]['id'].'<br>';
+                if ($DB->get_field('assign', 'requiresubmissionstatement', array('id' => $assignmdl[$k]['id'])) == 0) {
+                    $DB->set_field('assign', 'requiresubmissionstatement', 1, array('id' => $assignmdl[$k]['id']));
+                    echo 'Require Submission Statement set <strong>ON</strong> for '.$assignmdl[$k]['id'].'<br>';
                 }
                 // Notify graders - standard. OFF.
-                if ($DB->get_field('assign', 'sendnotifications', array('id'=>$assign_mdl[$k]['id'])) == 1) {
-                    $DB->set_field('assign', 'sendnotifications', 0, array('id'=>$assign_mdl[$k]['id']));
-                    echo 'Notify Graders - Standard set <strong>OFF</strong> for '.$assign_mdl[$k]['id'].'<br>';
+                if ($DB->get_field('assign', 'sendnotifications', array('id' => $assignmdl[$k]['id'])) == 1) {
+                    $DB->set_field('assign', 'sendnotifications', 0, array('id' => $assignmdl[$k]['id']));
+                    echo 'Notify Graders - Standard set <strong>OFF</strong> for '.$assignmdl[$k]['id'].'<br>';
                 }
                 // Notify graders - late. OFF.
-                if ($DB->get_field('assign', 'sendlatenotifications', array('id'=>$assign_mdl[$k]['id'])) == 0) {
-                    $DB->set_field('assign', 'sendlatenotifications', 0, array('id'=>$assign_mdl[$k]['id']));
-                    echo 'Notify Graders - Late set <strong>OFF</strong> for '.$assign_mdl[$k]['id'].'<br>';
+                if ($DB->get_field('assign', 'sendlatenotifications', array('id' => $assignmdl[$k]['id'])) == 0) {
+                    $DB->set_field('assign', 'sendlatenotifications', 0, array('id' => $assignmdl[$k]['id']));
+                    echo 'Notify Graders - Late set <strong>OFF</strong> for '.$assignmdl[$k]['id'].'<br>';
                 }
                 // Notify students. ON.
                 // This is controlled by workflow - notification is not released until Workflow is marked as 'Released'.
-                if ($DB->get_field('assign', 'sendstudentnotifications', array('id'=>$assign_mdl[$k]['id'])) == 0) {
-                    $DB->set_field('assign', 'sendstudentnotifications', 1, array('id'=>$assign_mdl[$k]['id']));
-                    echo 'Notify students set <strong>ON</strong> for '.$assign_mdl[$k]['id'].'<br>';
+                if ($DB->get_field('assign', 'sendstudentnotifications', array('id' => $assignmdl[$k]['id'])) == 0) {
+                    $DB->set_field('assign', 'sendstudentnotifications', 1, array('id' => $assignmdl[$k]['id']));
+                    echo 'Notify students set <strong>ON</strong> for '.$assignmdl[$k]['id'].'<br>';
                 }
 
                 // TurnItIn Settings.
                 echo 'TurnItIn not set<br>';
-//                $assign_mdl[$k]['cm']
                 // Use_TurnItIn. ON.
-                if ($DB->get_field('plagiarism_turnitin_config', 'name', array('cm'=>$assign_mdl[$k]['cm'], 'name'=>'use_turnitin')) == 0) {
-                    $DB->set_field('plagiarism_turnitin_config', 'value', 1, array('cm'=>$assign_mdl[$k]['cm'], 'name'=>'use_turnitin'));
-                    echo 'Use TurnItIn <strong>ON</strong> for '.$assign_mdl[$k]['id'].'<br>';
+                if ($DB->get_field('plagiarism_turnitin_config', 'name',
+                    array('cm' => $assignmdl[$k]['cm'], 'name' => 'use_turnitin')) == 0) {
+                    $DB->set_field('plagiarism_turnitin_config', 'value', 1,
+                    array('cm' => $assignmdl[$k]['cm'], 'name' => 'use_turnitin'));
+                    echo 'Use TurnItIn <strong>ON</strong> for '.$assignmdl[$k]['id'].'<br>';
                 }
                 /* TII Site default settings - no need for code
                  * --------------------------------------------
@@ -264,31 +254,28 @@ class assessmentsettings extends \core\task\scheduled_task {
                  * Exclude small matches. plagiarism_exclude_matches NO.
                  */
 
-
                 // Set grading scale.
-                $gradeitem = $DB->get_record('grade_items', array('idnumber'=>$assign_mdl[$k]['lc']));
-                $gradetype_mdl = $gradeitem->scaleid;
-                $gradetype_dw =  $assess_ext[$assign_mdl[$k]['lc']]['ms'];
-                $gradetypeid = $DB->get_field('scale', 'id', array('name'=>$gradetype_dw));
-                if ($gradetype_mdl != $gradetypeid) {
+                $gradeitem = $DB->get_record('grade_items', array('idnumber' => $assignmdl[$k]['lc']));
+                $gradetypemdl = $gradeitem->scaleid;
+                $gradetypedw = $assessext[$assignmdl[$k]['lc']]['ms'];
+                $gradetypeid = $DB->get_field('scale', 'id', array('name' => $gradetypedw));
+                if ($gradetypemdl != $gradetypeid) {
                     if ($gradetypeid > 0 ) {
-                        $DB->set_field('grade_items', 'scaleid', $gradetypeid, array('idnumber'=>$assign_mdl[$k]['lc']));
-                        $DB->set_field('assign', 'grade', -$gradetypeid, array('id'=>$assign_mdl[$k]['id']));
-                        $DB->set_field('grade_items', 'gradetype', 2, array('idnumber'=>$assign_mdl[$k]['lc']));
+                        $DB->set_field('grade_items', 'scaleid', $gradetypeid, array('idnumber' => $assignmdl[$k]['lc']));
+                        $DB->set_field('assign', 'grade', -$gradetypeid, array('id' => $assignmdl[$k]['id']));
+                        $DB->set_field('grade_items', 'gradetype', 2, array('idnumber' => $assignmdl[$k]['lc']));
                     } else {
-                        $DB->set_field('grade_items', 'scaleid', null, array('idnumber'=>$assign_mdl[$k]['lc']));
-                        $DB->set_field('assign', 'grade', 100, array('id'=>$assign_mdl[$k]['id']));
-                        $DB->set_field('grade_items', 'gradetype', 1, array('idnumber'=>$assign_mdl[$k]['lc']));
+                        $DB->set_field('grade_items', 'scaleid', null, array('idnumber' => $assignmdl[$k]['lc']));
+                        $DB->set_field('assign', 'grade', 100, array('id' => $assignmdl[$k]['id']));
+                        $DB->set_field('grade_items', 'gradetype', 1, array('idnumber' => $assignmdl[$k]['lc']));
                     }
-                    echo 'Grade scale set as '.$gradetypeid.' = '.$gradetype_dw.'<br>';
+                    echo 'Grade scale set as '.$gradetypeid.' = '.$gradetypedw.'<br>';
                 }
             }
         }
 
-
-
-    // Free memory.
-    $extdb->Close();
+        // Free memory.
+        $extdb->Close();
     }
 
     /* Db functions cloned from enrol/db plugin.

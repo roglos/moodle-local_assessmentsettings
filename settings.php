@@ -134,16 +134,4 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_assessmentsettings/remotegradestable',
         get_string('remotegradestable', 'local_assessmentsettings'),
         get_string('remotegradestable_desc', 'local_assessmentsettings'), ''));
-
-    // Fields to use.
-//    $settings->add(new admin_setting_configtext('local_assessmentsettings/linkcode',
-//        get_string('linkcode', 'local_assessmentsettings'),
-//        get_string('linkcode', 'local_assessmentsettings'), ''));
-//    $settings->add(new admin_setting_configtext('local_assessmentsettings/duedate',
-//        get_string('duedate', 'local_assessmentsettings'),
-//        get_string('duedate', 'local_assessmentsettings'), ''));
-//    $settings->add(new admin_setting_configtext('local_assessmentsettings/feedbackdue',
-//        get_string('feedbackdue', 'local_assessmentsettings'),
-//        get_string('feedbackdue', 'local_assessmentsettings'), ''));
-
 }
