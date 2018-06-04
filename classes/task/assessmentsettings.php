@@ -86,6 +86,14 @@ class assessmentsettings extends \core\task\scheduled_task {
             JOIN {assign} a ON m.instance = a.id
             JOIN {modules} mo ON m.module = mo.id
             WHERE m.idnumber IS NOT null AND m.idnumber != "" AND mo.name = "assign"');
+        // Create reference array of assignment id and link code from mdl.
+        $assignmdl = array();
+        foreach ($sqldates as $sd) {
+            $assignmdl[$sd->linkcode]['id'] = $sd->id;
+            $assignmdl[$sd->linkcode]['cm'] = $sd->cm;
+            $assignmdl[$sd->linkcode]['lc'] = $sd->linkcode;
+            $assignmdl[$sd->linkcode]['name'] = $sd->name;
+        }
 
         // Get external assessments table name.
         $tableassm = $this->get_config('remotetable');
@@ -121,68 +129,15 @@ class assessmentsettings extends \core\task\scheduled_task {
             echo 'Error reading data from the external course table<br>';
             return 4;
         }
-
-        // Get external table for grades and extensions - individual users->assessments.
-        $tablegrades = $this->get_config('remotegradestable');
-        $extensions = array();
-        // Read grades and extensions data from external table.
-        /********************************************************
-         * ARRAY                                                *
-         *     id                                               *
-         *     student_code                                     *
-         *     assessment_idcode                                *
-         *     student_ext_duedate                               *
-         *     student_ext_duetime                              *
-         *     student_fbdue_date                               *
-         *     student_fbdue_time                               *
-         ********************************************************/
-        $sql = $this->db_get_sql($tablegrades, array(), array(), true);
-        if ($rs = $extdb->Execute($sql)) {
-            if (!$rs->EOF) {
-                while ($fields = $rs->FetchRow()) {
-                    $fields = array_change_key_case($fields, CASE_LOWER);
-                    $fields = $this->db_decode($fields);
-                    $extensions[] = $fields;
-                }
-            }
-            $rs->Close();
-        } else {
-            // Report error if required.
-            $extdb->Close();
-            echo 'Error reading data from the external course table<br>';
-            return 4;
-        }
-
-        // Create reference array of assignment id and link code from mdl.
-        $assignmdl = array();
-        foreach ($sqldates as $sd) {
-            $assignmdl[$sd->linkcode]['id'] = $sd->id;
-            $assignmdl[$sd->linkcode]['cm'] = $sd->cm;
-            $assignmdl[$sd->linkcode]['lc'] = $sd->linkcode;
-            $assignmdl[$sd->linkcode]['name'] = $sd->name;
-        }
         // Create reference array of assignment id and link code from data warehouse.
         $assessext = array();
         foreach ($assessments as $am) {
-            $assessext[$am[assessment_idcode]]['id'] = $am[id];
-            $assessext[$am[assessment_idcode]]['lc'] = $am[assessment_idcode];
-            $assessext[$am[assessment_idcode]]['name'] = $am[assessment_name];
-            $assessext[$am[assessment_idcode]]['dd'] = $am[assessment_duedate];
-            $assessext[$am[assessment_idcode]]['fb'] = $am[assessment_feedbackdate];
-            $assessext[$am[assessment_idcode]]['ms'] = $am[assessment_markscheme_code];
-        }
-        // Create reference array of students - if has a linked assessement AND an extension date/time.
-        $student = array();
-        foreach ($extensions as $e) {
-            $key = $e[student_code].$e[assessment_idcode];
-            if ($e[assessment_idcode] && ($e[student_ext_duedate] || $e[student_ext_duetime])) {
-                $student[$key]['stucode'] = $e[student_code];
-                $student[$key]['lc'] = $e[assessment_idcode];
-                $student[$key]['extdate'] = $e[student_ext_duedate];
-                $student[$key]['exttime'] = $e[student_ext_duetime];
-                $student[$key]['fbdate'] = $e[student_fbdue_date];
-                $student[$key]['fbtime'] = $e[student_fbdue_time];
-            }
+            $assessext[$am['assessment_idcode']]['id'] = $am['id'];
+            $assessext[$am['assessment_idcode']]['lc'] = $am['assessment_idcode'];
+            $assessext[$am['assessment_idcode']]['name'] = $am['assessment_name'];
+            $assessext[$am['assessment_idcode']]['dd'] = $am['assessment_duedate'];
+            $assessext[$am['assessment_idcode']]['fb'] = $am['assessment_feedbackdate'];
+            $assessext[$am['assessment_idcode']]['ms'] = $am['assessment_markscheme_code'];
         }
 
         /* Set assignment settings *
